@@ -20,19 +20,12 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.ListFragment;
 
 import com.android.test.uibench.listview.CompatListActivity;
 
 public class ShadowGridActivity extends CompatListActivity {
-    public static class NoDividerListFragment extends ListFragment {
-        @Override
-        public void onViewCreated(View view, Bundle savedInstanceState) {
-            super.onViewCreated(view, savedInstanceState);
-            getListView().setDivider(null);
-        }
-    };
-
     @Override
     protected ListAdapter createListAdapter() {
         return new ArrayAdapter<>(this, R.layout.card_row, R.id.card_text,
@@ -42,5 +35,13 @@ public class ShadowGridActivity extends CompatListActivity {
     @Override
     protected ListFragment createListFragment() {
         return new NoDividerListFragment();
+    }
+
+    public static class NoDividerListFragment extends ListFragment {
+        @Override
+        public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+            super.onViewCreated(view, savedInstanceState);
+            getListView().setDivider(null);
+        }
     }
 }

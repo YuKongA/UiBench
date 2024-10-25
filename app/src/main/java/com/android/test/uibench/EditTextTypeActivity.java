@@ -24,7 +24,7 @@ import androidx.appcompat.app.AppCompatActivity;
 /**
  * Note: currently incomplete, complexity of input continuously grows, instead of looping
  * over a stable amount of work.
- *
+ * <p>
  * Simulates typing continuously into an EditText.
  */
 public class EditTextTypeActivity extends AppCompatActivity {
@@ -37,6 +37,7 @@ public class EditTextTypeActivity extends AppCompatActivity {
             "com.android.uibench.action.CANCEL_TYPING_CALLBACK";
 
     private static String sSeedText = "";
+
     static {
         final int count = 100;
         final String string = "hello ";

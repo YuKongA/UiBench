@@ -15,6 +15,7 @@
  */
 package com.android.test.uibench;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -24,13 +25,13 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.ListFragment;
 
 import com.android.test.uibench.listview.CompatListActivity;
 
 import java.text.Collator;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -39,25 +40,15 @@ import java.util.Map;
 public class MainActivity extends CompatListActivity {
     private static final String EXTRA_PATH = "activity_path";
     private static final String CATEGORY_HWUI_TEST = "com.android.test.uibench.TEST";
+    private final static Comparator<Map<String, Object>> sDisplayNameComparator =
+            new Comparator<Map<String, Object>>() {
+                private final Collator collator = Collator.getInstance();
 
+                public int compare(Map<String, Object> map1, Map<String, Object> map2) {
+                    return collator.compare(map1.get("title"), map2.get("title"));
+                }
+            };
     private String mActivityPath = "";
-
-    public static class TestListFragment extends ListFragment {
-        @Override
-        @SuppressWarnings("unchecked")
-        public void onListItemClick(ListView l, View v, int position, long id) {
-            Map<String, Object> map = (Map<String, Object>)l.getItemAtPosition(position);
-
-            Intent intent = (Intent) map.get("intent");
-            startActivity(intent);
-        }
-
-        @Override
-        public void onViewCreated(View view, Bundle savedInstanceState) {
-            super.onViewCreated(view, savedInstanceState);
-            getListView().setTextFilterEnabled(true);
-        }
-    }
 
     @Override
     protected void initializeActivity() {
@@ -76,8 +67,8 @@ public class MainActivity extends CompatListActivity {
     @Override
     protected ListAdapter createListAdapter() {
         return new SimpleAdapter(this, getData(mActivityPath),
-                android.R.layout.simple_list_item_1, new String[] { "title" },
-                new int[] { android.R.id.text1 });
+                android.R.layout.simple_list_item_1, new String[]{"title"},
+                new int[]{android.R.id.text1});
     }
 
     @Override
@@ -92,15 +83,12 @@ public class MainActivity extends CompatListActivity {
         mainIntent.addCategory(CATEGORY_HWUI_TEST);
 
         PackageManager pm = getPackageManager();
-        List<ResolveInfo> list = pm.queryIntentActivities(mainIntent, 0);
-
-        if (null == list)
-            return myData;
+        @SuppressLint("QueryPermissionsNeeded") List<ResolveInfo> list = pm.queryIntentActivities(mainIntent, 0);
 
         String[] prefixPath;
         String prefixWithSlash = prefix;
 
-        if (prefix.equals("")) {
+        if (prefix.isEmpty()) {
             prefixPath = null;
         } else {
             prefixPath = prefix.split("/");
@@ -114,11 +102,9 @@ public class MainActivity extends CompatListActivity {
         for (int i = 0; i < len; i++) {
             ResolveInfo info = list.get(i);
             CharSequence labelSeq = info.loadLabel(pm);
-            String label = labelSeq != null
-                    ? labelSeq.toString()
-                    : info.activityInfo.name;
+            String label = labelSeq.toString();
 
-            if (prefixWithSlash.length() == 0 || label.startsWith(prefixWithSlash)) {
+            if (prefixWithSlash.isEmpty() || label.startsWith(prefixWithSlash)) {
 
                 String[] labelPath = label.split("/");
 
@@ -130,7 +116,7 @@ public class MainActivity extends CompatListActivity {
                             info.activityInfo.name));
                 } else {
                     if (entries.get(nextLabel) == null) {
-                        addItem(myData, nextLabel, browseIntent(prefix.equals("") ?
+                        addItem(myData, nextLabel, browseIntent(prefix.isEmpty() ?
                                 nextLabel : prefix + "/" + nextLabel));
                         entries.put(nextLabel, true);
                     }
@@ -138,19 +124,10 @@ public class MainActivity extends CompatListActivity {
             }
         }
 
-        Collections.sort(myData, sDisplayNameComparator);
+        myData.sort(sDisplayNameComparator);
 
         return myData;
     }
-
-    private final static Comparator<Map<String, Object>> sDisplayNameComparator =
-            new Comparator<Map<String, Object>>() {
-                private final Collator collator = Collator.getInstance();
-
-                public int compare(Map<String, Object> map1, Map<String, Object> map2) {
-                    return collator.compare(map1.get("title"), map2.get("title"));
-                }
-            };
 
     protected Intent activityIntent(String pkg, String componentName) {
         Intent result = new Intent();
@@ -170,5 +147,22 @@ public class MainActivity extends CompatListActivity {
         temp.put("title", name);
         temp.put("intent", intent);
         data.add(temp);
+    }
+
+    public static class TestListFragment extends ListFragment {
+        @Override
+        @SuppressWarnings("unchecked")
+        public void onListItemClick(ListView l, View v, int position, long id) {
+            Map<String, Object> map = (Map<String, Object>) l.getItemAtPosition(position);
+
+            Intent intent = (Intent) map.get("intent");
+            startActivity(intent);
+        }
+
+        @Override
+        public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+            super.onViewCreated(view, savedInstanceState);
+            getListView().setTextFilterEnabled(true);
+        }
     }
 }

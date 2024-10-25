@@ -23,6 +23,8 @@ import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 /**
@@ -53,12 +55,12 @@ public class SaveLayerInterleaveActivity extends AppCompatActivity {
             }
 
             @Override
-            public void draw(Canvas canvas) {
+            public void draw(@NonNull Canvas canvas) {
                 canvas.drawColor(Color.RED);
 
                 Rect bounds = getBounds();
                 int regions = 20;
-                int smallRectHeight = (bounds.height()/regions);
+                int smallRectHeight = (bounds.height() / regions);
                 int padding = smallRectHeight / 4;
                 int top = bounds.top;
                 mBluePaint.setColor(Color.BLUE);
@@ -71,14 +73,14 @@ public class SaveLayerInterleaveActivity extends AppCompatActivity {
                     canvas.saveLayer(bounds.left, top, bounds.right, top + padding,
                             mBluePaint);
                     canvas.drawColor(Color.YELLOW);
-                    canvas.drawText("offscreen line "+ i, bounds.left, top + padding,
+                    canvas.drawText("offscreen line " + i, bounds.left, top + padding,
                             mBluePaint);
                     canvas.restore();
 
                     Rect partX = new Rect(bounds.left, top + padding,
-                            bounds.right,top + smallRectHeight - padding);
+                            bounds.right, top + smallRectHeight - padding);
                     canvas.drawRect(partX, mBluePaint);
-                    canvas.drawText("onscreen line "+ i, bounds.left,
+                    canvas.drawText("onscreen line " + i, bounds.left,
                             top + smallRectHeight - padding, mGreenPaint);
                 }
 

@@ -23,17 +23,39 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.os.Bundle;
-import androidx.appcompat.app.AppCompatActivity;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.view.View;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+
 public class BitmapUploadActivity extends AppCompatActivity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_bitmap_upload);
+
+        // animate color to force bitmap uploads
+        UploadView uploadView = findViewById(R.id.upload_view);
+        ObjectAnimator colorValueAnimator = ObjectAnimator.ofInt(uploadView, "colorValue", 0, 255);
+        colorValueAnimator.setRepeatMode(ValueAnimator.REVERSE);
+        colorValueAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        colorValueAnimator.start();
+
+        // animate scene root to guarantee there's a minimum amount of GPU rendering work
+        View uploadRoot = findViewById(R.id.upload_root);
+        ObjectAnimator yAnimator = ObjectAnimator.ofFloat(uploadRoot, "translationY", 0, 100);
+        yAnimator.setRepeatMode(ValueAnimator.REVERSE);
+        yAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        yAnimator.start();
+    }
+
     public static class UploadView extends View {
-        private int mColorValue;
-        private Bitmap mBitmap;
         private final DisplayMetrics mMetrics = new DisplayMetrics();
         private final Rect mRect = new Rect();
+        private int mColorValue;
+        private Bitmap mBitmap;
 
         public UploadView(Context context, AttributeSet attrs) {
             super(context, attrs);
@@ -55,7 +77,7 @@ public class BitmapUploadActivity extends AppCompatActivity {
         protected void onAttachedToWindow() {
             super.onAttachedToWindow();
 
-            getDisplay().getMetrics(mMetrics);
+            getDisplay().getRealMetrics(mMetrics);
             int minDisplayDimen = Math.min(mMetrics.widthPixels, mMetrics.heightPixels);
             int bitmapSize = Math.min((int) (minDisplayDimen * 0.75), 720);
             if (mBitmap == null
@@ -66,31 +88,11 @@ public class BitmapUploadActivity extends AppCompatActivity {
         }
 
         @Override
-        protected void onDraw(Canvas canvas) {
+        protected void onDraw(@NonNull Canvas canvas) {
             if (mBitmap != null) {
                 mRect.set(0, 0, getWidth(), getHeight());
                 canvas.drawBitmap(mBitmap, null, mRect, null);
             }
         }
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_bitmap_upload);
-
-        // animate color to force bitmap uploads
-        UploadView uploadView = findViewById(R.id.upload_view);
-        ObjectAnimator colorValueAnimator = ObjectAnimator.ofInt(uploadView, "colorValue", 0, 255);
-        colorValueAnimator.setRepeatMode(ValueAnimator.REVERSE);
-        colorValueAnimator.setRepeatCount(ValueAnimator.INFINITE);
-        colorValueAnimator.start();
-
-        // animate scene root to guarantee there's a minimum amount of GPU rendering work
-        View uploadRoot = findViewById(R.id.upload_root);
-        ObjectAnimator yAnimator = ObjectAnimator.ofFloat(uploadRoot, "translationY", 0, 100);
-        yAnimator.setRepeatMode(ValueAnimator.REVERSE);
-        yAnimator.setRepeatCount(ValueAnimator.INFINITE);
-        yAnimator.start();
     }
 }

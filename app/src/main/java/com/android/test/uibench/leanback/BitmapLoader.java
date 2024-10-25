@@ -21,9 +21,11 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.AsyncTask;
-import androidx.collection.LruCache;
 import android.util.DisplayMetrics;
 import android.widget.ImageView;
+
+import androidx.annotation.NonNull;
+import androidx.collection.LruCache;
 
 /**
  * This class simulates a typical Bitmap memory cache with up to 1.5 times of screen pixels.
@@ -32,7 +34,7 @@ import android.widget.ImageView;
  * on the graphics side.
  * There will be two general use cases for cards in leanback test:
  * 1. As a typical app, each card has its own id and load its own Bitmap, the test result will
- *    include impact of texture upload.
+ * include impact of texture upload.
  * 2. All cards share same id/Bitmap and there wont be texture upload.
  */
 public class BitmapLoader {
@@ -65,12 +67,37 @@ public class BitmapLoader {
             int maxBytes = (int) (width * height * BYTES_PER_PIXEL * CACHE_SIZE_TO_SCREEN);
             sLruCache = new LruCache<Long, Bitmap>(maxBytes) {
                 @Override
-                protected int sizeOf(Long key, Bitmap value) {
+                protected int sizeOf(@NonNull Long key, @NonNull Bitmap value) {
                     return value.getByteCount();
                 }
             };
         }
         return sLruCache;
+    }
+
+    public static void loadBitmap(ImageView view, long id, int width, int height) {
+        Context context = view.getContext();
+        Bitmap bitmap = getLruCache(context).get(id);
+        if (bitmap != null) {
+            view.setImageBitmap(bitmap);
+            return;
+        }
+        new BitmapAsyncTask(view, id, width, height)
+                .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+    }
+
+    public static void cancel(ImageView view) {
+        BitmapAsyncTask task = (BitmapAsyncTask) view.getTag();
+        if (task != null && task.mImageView == view) {
+            task.mImageView.setTag(null);
+            task.cancel(false);
+        }
+    }
+
+    public static void clear() {
+        if (sLruCache != null) {
+            sLruCache.evictAll();
+        }
     }
 
     static class BitmapAsyncTask extends AsyncTask<Void, Void, Bitmap> {
@@ -114,31 +141,6 @@ public class BitmapLoader {
                 sLruCache.put(mId, bitmap);
                 mImageView.setImageBitmap(bitmap);
             }
-        }
-    }
-
-    public static void loadBitmap(ImageView view, long id, int width, int height) {
-        Context context = view.getContext();
-        Bitmap bitmap = getLruCache(context).get(id);
-        if (bitmap != null) {
-            view.setImageBitmap(bitmap);
-            return;
-        }
-        new BitmapAsyncTask(view, id, width, height)
-                .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-    }
-
-    public static void cancel(ImageView view) {
-        BitmapAsyncTask task = (BitmapAsyncTask) view.getTag();
-        if (task != null && task.mImageView == view) {
-            task.mImageView.setTag(null);
-            task.cancel(false);
-        }
-    }
-
-    public static void clear() {
-        if (sLruCache != null) {
-            sLruCache.evictAll();
         }
     }
 }

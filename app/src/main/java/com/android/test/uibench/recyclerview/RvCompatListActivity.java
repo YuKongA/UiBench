@@ -31,22 +31,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.android.test.uibench.R;
 
 public abstract class RvCompatListActivity extends AppCompatActivity {
-    public static class RecyclerViewFragment extends Fragment {
-        RecyclerView.LayoutManager layoutManager;
-        RecyclerView.Adapter adapter;
-
-        @Nullable
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                Bundle savedInstanceState) {
-            RecyclerView recyclerView = (RecyclerView) inflater.inflate(
-                    R.layout.recycler_view, container, false);
-            recyclerView.setLayoutManager(layoutManager);
-            recyclerView.setAdapter(adapter);
-            return recyclerView;
-        }
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,4 +56,20 @@ public abstract class RvCompatListActivity extends AppCompatActivity {
     }
 
     protected abstract RecyclerView.Adapter createAdapter();
+
+    public static class RecyclerViewFragment extends Fragment {
+        RecyclerView.LayoutManager layoutManager;
+        RecyclerView.Adapter adapter;
+
+        @Nullable
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+            RecyclerView recyclerView = (RecyclerView) inflater.inflate(
+                    R.layout.recycler_view, container, false);
+            recyclerView.setLayoutManager(layoutManager);
+            recyclerView.setAdapter(adapter);
+            return recyclerView;
+        }
+    }
 }

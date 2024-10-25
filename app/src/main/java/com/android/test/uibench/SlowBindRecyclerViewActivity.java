@@ -17,8 +17,10 @@ package com.android.test.uibench;
 
 import android.content.Context;
 import android.os.Trace;
+
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.android.test.uibench.recyclerview.RvBoxAdapter;
 import com.android.test.uibench.recyclerview.RvCompatListActivity;
 
@@ -29,9 +31,9 @@ public class SlowBindRecyclerViewActivity extends RvCompatListActivity {
      * Spin wait. Used instead of sleeping so a core is used up for the duration, and so
      * traces/sampled profiling show the sections as expensive, and not just a scheduling mistake.
      */
-    private static void spinWaitMs(long ms) {
+    private static void spinWaitMs() {
         long start = System.nanoTime();
-        while (System.nanoTime() - start < TimeUnit.MILLISECONDS.toNanos(ms));
+        while (System.nanoTime() - start < TimeUnit.MILLISECONDS.toNanos(3)) ;
     }
 
     @Override
@@ -46,7 +48,7 @@ public class SlowBindRecyclerViewActivity extends RvCompatListActivity {
             public void onBindViewHolder(ViewHolder holder, int position) {
                 Trace.beginSection("bind item " + position);
 
-                spinWaitMs(3);
+                spinWaitMs();
                 super.onBindViewHolder(holder, position);
                 Trace.endSection();
             }

@@ -27,8 +27,8 @@ public class BrowseFragment extends androidx.leanback.app.BrowseSupportFragment 
         TestHelper.initHeaderState(this);
         super.onCreate(savedInstanceState);
         BitmapLoader.clear();
-        TestHelper.initBackground(getActivity());
-        boolean runEntranceTransition = TestHelper.runEntranceTransition(getActivity());
+        TestHelper.initBackground(requireActivity());
+        boolean runEntranceTransition = TestHelper.runEntranceTransition(requireActivity());
         if (runEntranceTransition) {
             prepareEntranceTransition();
         }

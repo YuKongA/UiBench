@@ -15,12 +15,15 @@
  */
 package com.android.test.uibench.recyclerview;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Color;
-import androidx.recyclerview.widget.RecyclerView;
 import android.util.TypedValue;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -28,23 +31,9 @@ import java.util.List;
 
 public class RvBoxAdapter extends RecyclerView.Adapter<RvBoxAdapter.ViewHolder> {
 
-    private int mBackground;
+    private final int mBackground;
 
-    private List<String> mValues;
-
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        public TextView mTextView;
-
-        public ViewHolder(TextView v) {
-            super(v);
-            mTextView = v;
-        }
-
-        @Override
-        public String toString() {
-            return super.toString() + " '" + mTextView.getText();
-        }
-    }
+    private final List<String> mValues;
 
     public RvBoxAdapter(Context context, String[] strings) {
         TypedValue val = new TypedValue();
@@ -57,6 +46,7 @@ public class RvBoxAdapter extends RecyclerView.Adapter<RvBoxAdapter.ViewHolder> 
         Collections.addAll(mValues, strings);
     }
 
+    @NonNull
     @Override
     public RvBoxAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         final ViewHolder h = new ViewHolder(new TextView(parent.getContext()));
@@ -75,6 +65,7 @@ public class RvBoxAdapter extends RecyclerView.Adapter<RvBoxAdapter.ViewHolder> 
         return h;
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         holder.mTextView.setText(position + ":" + mValues.get(position));
@@ -84,10 +75,14 @@ public class RvBoxAdapter extends RecyclerView.Adapter<RvBoxAdapter.ViewHolder> 
 
     private int getBackgroundColor(int position) {
         switch (position % 4) {
-            case 0: return Color.LTGRAY;
-            case 1: return Color.RED;
-            case 2: return Color.DKGRAY;
-            case 3: return Color.BLUE;
+            case 0:
+                return Color.LTGRAY;
+            case 1:
+                return Color.RED;
+            case 2:
+                return Color.DKGRAY;
+            case 3:
+                return Color.BLUE;
         }
         return Color.TRANSPARENT;
     }
@@ -95,5 +90,20 @@ public class RvBoxAdapter extends RecyclerView.Adapter<RvBoxAdapter.ViewHolder> 
     @Override
     public int getItemCount() {
         return mValues.size();
+    }
+
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        public TextView mTextView;
+
+        public ViewHolder(TextView v) {
+            super(v);
+            mTextView = v;
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return super.toString() + " '" + mTextView.getText();
+        }
     }
 }

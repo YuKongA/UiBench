@@ -19,11 +19,12 @@ import android.animation.PropertyValuesHolder;
 import android.animation.ValueAnimator;
 import android.graphics.Color;
 import android.os.Bundle;
-import androidx.appcompat.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.FrameLayout;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 /**
  * Tests resizing of a View backed by a hardware layer.
@@ -46,13 +47,10 @@ public class ResizeHWLayerActivity extends AppCompatActivity {
         ValueAnimator animator = ValueAnimator.ofPropertyValuesHolder(pvhWidth, pvhHeight);
         animator.setRepeatMode(ValueAnimator.REVERSE);
         animator.setRepeatCount(ValueAnimator.INFINITE);
-        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator valueAnimator) {
-                params.width = (Integer)valueAnimator.getAnimatedValue("width");
-                params.height = (Integer)valueAnimator.getAnimatedValue("height");
-                child.requestLayout();
-            }
+        animator.addUpdateListener(valueAnimator -> {
+            params.width = (Integer) valueAnimator.getAnimatedValue("width");
+            params.height = (Integer) valueAnimator.getAnimatedValue("height");
+            child.requestLayout();
         });
         animator.start();
         setContentView(child);

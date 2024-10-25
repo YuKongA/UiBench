@@ -22,19 +22,16 @@ import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import androidx.appcompat.app.AppCompatActivity;
 import android.view.View;
 import android.widget.GridLayout;
 import android.widget.ImageView;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.List;
 import java.util.Map;
 
 public class ActivityTransition extends AppCompatActivity {
-    private static final String KEY_ID = "ViewTransitionValues:id";
-
-    private ImageView mHero;
-
     public static final int[] DRAWABLES = {
             R.drawable.ball,
             R.drawable.block,
@@ -45,7 +42,6 @@ public class ActivityTransition extends AppCompatActivity {
             R.drawable.scissors,
             R.drawable.woot,
     };
-
     public static final int[] IDS = {
             R.id.ball,
             R.id.block,
@@ -56,7 +52,6 @@ public class ActivityTransition extends AppCompatActivity {
             R.id.scissors,
             R.id.woot,
     };
-
     public static final String[] NAMES = {
             "ball",
             "block",
@@ -67,6 +62,8 @@ public class ActivityTransition extends AppCompatActivity {
             "scissors",
             "woot",
     };
+    private static final String KEY_ID = "ViewTransitionValues:id";
+    private ImageView mHero;
 
     public static int getIdForKey(String id) {
         return IDS[getIndexForKey(id)];
@@ -109,7 +106,7 @@ public class ActivityTransition extends AppCompatActivity {
             setEnterSharedElementCallback(new SharedElementCallback() {
                 @Override
                 public void onMapSharedElements(List<String> names,
-                        Map<String, View> sharedElements) {
+                                                Map<String, View> sharedElements) {
                     sharedElements.put("hero", mHero);
                 }
             });

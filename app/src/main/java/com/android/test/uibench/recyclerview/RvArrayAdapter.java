@@ -15,35 +15,25 @@
  */
 package com.android.test.uibench.recyclerview;
 
-import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
 public class RvArrayAdapter extends RecyclerView.Adapter<RvArrayAdapter.ViewHolder> {
-    private String[] mDataSet;
+    private final String[] mDataSet;
     private LayoutInflater mLayoutInflater;
-
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        private final TextView mTextView;
-
-        public ViewHolder(View v) {
-            super(v);
-            mTextView = (TextView) v.findViewById(android.R.id.text1);
-        }
-
-        public TextView getTextView() {
-            return mTextView;
-        }
-    }
 
     public RvArrayAdapter(String[] dataSet) {
         mDataSet = dataSet;
     }
 
+    @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType) {
         if (mLayoutInflater == null) {
             mLayoutInflater = LayoutInflater.from(viewGroup.getContext());
         }
@@ -60,5 +50,18 @@ public class RvArrayAdapter extends RecyclerView.Adapter<RvArrayAdapter.ViewHold
     @Override
     public int getItemCount() {
         return mDataSet.length;
+    }
+
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        private final TextView mTextView;
+
+        public ViewHolder(View v) {
+            super(v);
+            mTextView = v.findViewById(android.R.id.text1);
+        }
+
+        public TextView getTextView() {
+            return mTextView;
+        }
     }
 }

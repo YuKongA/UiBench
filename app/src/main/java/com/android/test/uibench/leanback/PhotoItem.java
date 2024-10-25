@@ -18,14 +18,33 @@ package com.android.test.uibench.leanback;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import androidx.annotation.NonNull;
+
 public class PhotoItem implements Parcelable {
 
-    private String mTitle;
-    private long mId;
+    public static final Creator<PhotoItem> CREATOR
+            = new Creator<PhotoItem>() {
+        @Override
+        public PhotoItem createFromParcel(Parcel in) {
+            return new PhotoItem(in);
+        }
+
+        @Override
+        public PhotoItem[] newArray(int size) {
+            return new PhotoItem[size];
+        }
+    };
+    private final String mTitle;
+    private final long mId;
 
     public PhotoItem(String title, long id) {
         mTitle = title;
         mId = id;
+    }
+
+    private PhotoItem(Parcel in) {
+        mTitle = in.readString();
+        mId = in.readLong();
     }
 
     public long getId() {
@@ -36,6 +55,7 @@ public class PhotoItem implements Parcelable {
         return mTitle;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return mTitle;
@@ -50,23 +70,5 @@ public class PhotoItem implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(mTitle);
         dest.writeLong(mId);
-    }
-
-    public static final Creator<PhotoItem> CREATOR
-            = new Creator<PhotoItem>() {
-        @Override
-        public PhotoItem createFromParcel(Parcel in) {
-            return new PhotoItem(in);
-        }
-
-        @Override
-        public PhotoItem[] newArray(int size) {
-            return new PhotoItem[size];
-        }
-    };
-
-    private PhotoItem(Parcel in) {
-        mTitle = in.readString();
-        mId = in.readLong();
     }
 }

@@ -15,4 +15,5 @@
  */
 package com.android.test.uibench;
 
-public class TrivialAnimationActivityWideGamut extends TrivialAnimationActivity { }
+public class TrivialAnimationActivityWideGamut extends TrivialAnimationActivity {
+}

@@ -19,6 +19,9 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
+
 import androidx.leanback.app.BackgroundManager;
 import androidx.leanback.widget.ArrayObjectAdapter;
 import androidx.leanback.widget.HeaderItem;
@@ -26,8 +29,6 @@ import androidx.leanback.widget.ListRow;
 import androidx.leanback.widget.ListRowPresenter;
 import androidx.leanback.widget.ObjectAdapter;
 import androidx.leanback.widget.Presenter;
-import android.util.DisplayMetrics;
-import android.util.TypedValue;
 
 public class TestHelper {
 
@@ -58,138 +59,6 @@ public class TestHelper {
 
     static long sCardIdSeed = 0;
     static long sRowIdSeed = 0;
-
-    public static class ListRowPresenterBuilder {
-
-        boolean mShadow = DEFAULT_CARD_SHADOW;
-        boolean mRoundedCorner = DEFAULT_CARD_ROUND_RECT;
-
-        ListRowPresenterBuilder(Context context) {
-        }
-
-        public ListRowPresenterBuilder configShadow(boolean shadow) {
-            mShadow = shadow;
-            return this;
-        }
-
-        public ListRowPresenterBuilder configRoundedCorner(boolean roundedCorner) {
-            mRoundedCorner = roundedCorner;
-            return this;
-        }
-
-        public ListRowPresenter build() {
-            ListRowPresenter listRowPresenter = new ListRowPresenter();
-            listRowPresenter.setShadowEnabled(mShadow);
-            listRowPresenter.enableChildRoundedCorners(mRoundedCorner);
-            return listRowPresenter;
-        }
-    }
-
-    public static class CardPresenterBuilder {
-        Context mContext;
-        int mWidthDP = DEFAULT_CARD_WIDTH_DP;
-        int mHeightDP = DEFAULT_CARD_HEIGHT_DP;
-
-        CardPresenterBuilder(Context context) {
-            mContext = context;
-        }
-
-        public CardPresenterBuilder configWidthDP(int widthDP) {
-            mWidthDP = widthDP;
-            return this;
-        }
-
-        public CardPresenterBuilder configHeightDP(int hightDP) {
-            mHeightDP = hightDP;
-            return this;
-        }
-
-        public Presenter build() {
-            DisplayMetrics dm = mContext.getResources().getDisplayMetrics();
-            return new CardPresenter(
-                    (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, mWidthDP, dm),
-                    (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, mHeightDP, dm));
-        }
-    }
-
-    public static class RowsAdapterBuilder {
-
-        Context mContext;
-        int mCardsPerRow = DEFAULT_CARDS_PER_ROW;
-        int mRows = DEFAULT_ROWS;
-        CardPresenterBuilder mCardPresenterBuilder;
-        ListRowPresenterBuilder mListRowPresenterBuilder;
-        Presenter mCardPresenter;
-        boolean mBitmapUpload = DEFAULT_BITMAP_UPLOAD;
-
-        static final String[] sSampleStrings = new String[] {
-                "Hello world", "This is a test", "Android TV", "UI Jank Test",
-                "Scroll Up", "Scroll Down", "Load Bitmaps"
-        };
-
-        /**
-         * Create a RowsAdapterBuilder with default settings
-         */
-        public RowsAdapterBuilder(Context context) {
-            mContext = context;
-            mCardPresenterBuilder = new CardPresenterBuilder(context);
-            mListRowPresenterBuilder = new ListRowPresenterBuilder(context);
-        }
-
-        public ListRowPresenterBuilder getListRowPresenterBuilder() {
-            return mListRowPresenterBuilder;
-        }
-
-        public CardPresenterBuilder getCardPresenterBuilder() {
-            return mCardPresenterBuilder;
-        }
-
-        public RowsAdapterBuilder configRows(int rows) {
-            mRows = rows;
-            return this;
-        }
-
-        public RowsAdapterBuilder configCardsPerRow(int cardsPerRow) {
-            mCardsPerRow = cardsPerRow;
-            return this;
-        }
-
-        public RowsAdapterBuilder configBitmapUpLoad(boolean bitmapUpload) {
-            mBitmapUpload = bitmapUpload;
-            return this;
-        }
-
-        public ListRow buildListRow() {
-            ArrayObjectAdapter listRowAdapter = new ArrayObjectAdapter(mCardPresenter);
-            ListRow listRow = new ListRow(new HeaderItem(sRowIdSeed++, "Row"), listRowAdapter);
-            int indexSample = 0;
-            for (int i = 0; i < mCardsPerRow; i++) {
-                // when doing bitmap upload, use different id so each card has different bitmap
-                // otherwise all cards share the same bitmap
-                listRowAdapter.add(new PhotoItem(sSampleStrings[indexSample],
-                        (mBitmapUpload ? sCardIdSeed++ : 0)));
-                indexSample++;
-                if (indexSample >= sSampleStrings.length) {
-                    indexSample = 0;
-                }
-            }
-            return listRow;
-        }
-
-        public ObjectAdapter build() {
-            try {
-                mCardPresenter = mCardPresenterBuilder.build();
-                ArrayObjectAdapter adapter = new ArrayObjectAdapter(
-                        mListRowPresenterBuilder.build());
-                for (int i = 0; i < mRows; i++) {
-                    adapter.add(buildListRow());
-                }
-                return adapter;
-            } finally {
-                mCardPresenter = null;
-            }
-        }
-    }
 
     public static boolean runEntranceTransition(Activity activity) {
         return activity.getIntent().getBooleanExtra(EXTRA_ENTRANCE_TRANSITION,
@@ -239,9 +108,137 @@ public class TestHelper {
     }
 
     public static void initHeaderState(BrowseFragment fragment) {
-        if (!fragment.getActivity().getIntent()
+        if (!fragment.requireActivity().getIntent()
                 .getBooleanExtra(EXTRA_SHOW_FAST_LANE, DEFAULT_SHOW_FAST_LANE)) {
             fragment.setHeadersState(BrowseFragment.HEADERS_HIDDEN);
+        }
+    }
+
+    public static class ListRowPresenterBuilder {
+
+        boolean mShadow = DEFAULT_CARD_SHADOW;
+        boolean mRoundedCorner = DEFAULT_CARD_ROUND_RECT;
+
+        ListRowPresenterBuilder(Context context) {
+        }
+
+        public void configShadow(boolean shadow) {
+            mShadow = shadow;
+        }
+
+        public ListRowPresenterBuilder configRoundedCorner(boolean roundedCorner) {
+            mRoundedCorner = roundedCorner;
+            return this;
+        }
+
+        public ListRowPresenter build() {
+            ListRowPresenter listRowPresenter = new ListRowPresenter();
+            listRowPresenter.setShadowEnabled(mShadow);
+            listRowPresenter.enableChildRoundedCorners(mRoundedCorner);
+            return listRowPresenter;
+        }
+    }
+
+    public static class CardPresenterBuilder {
+        Context mContext;
+        int mWidthDP = DEFAULT_CARD_WIDTH_DP;
+        int mHeightDP = DEFAULT_CARD_HEIGHT_DP;
+
+        CardPresenterBuilder(Context context) {
+            mContext = context;
+        }
+
+        public CardPresenterBuilder configWidthDP(int widthDP) {
+            mWidthDP = widthDP;
+            return this;
+        }
+
+        public void configHeightDP(int hightDP) {
+            mHeightDP = hightDP;
+        }
+
+        public Presenter build() {
+            DisplayMetrics dm = mContext.getResources().getDisplayMetrics();
+            return new CardPresenter(
+                    (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, mWidthDP, dm),
+                    (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, mHeightDP, dm));
+        }
+    }
+
+    public static class RowsAdapterBuilder {
+
+        static final String[] sSampleStrings = new String[]{
+                "Hello world", "This is a test", "Android TV", "UI Jank Test",
+                "Scroll Up", "Scroll Down", "Load Bitmaps"
+        };
+        Context mContext;
+        int mCardsPerRow = DEFAULT_CARDS_PER_ROW;
+        int mRows = DEFAULT_ROWS;
+        CardPresenterBuilder mCardPresenterBuilder;
+        ListRowPresenterBuilder mListRowPresenterBuilder;
+        Presenter mCardPresenter;
+        boolean mBitmapUpload = DEFAULT_BITMAP_UPLOAD;
+
+        /**
+         * Create a RowsAdapterBuilder with default settings
+         */
+        public RowsAdapterBuilder(Context context) {
+            mContext = context;
+            mCardPresenterBuilder = new CardPresenterBuilder(context);
+            mListRowPresenterBuilder = new ListRowPresenterBuilder(context);
+        }
+
+        public ListRowPresenterBuilder getListRowPresenterBuilder() {
+            return mListRowPresenterBuilder;
+        }
+
+        public CardPresenterBuilder getCardPresenterBuilder() {
+            return mCardPresenterBuilder;
+        }
+
+        public RowsAdapterBuilder configRows(int rows) {
+            mRows = rows;
+            return this;
+        }
+
+        public RowsAdapterBuilder configCardsPerRow(int cardsPerRow) {
+            mCardsPerRow = cardsPerRow;
+            return this;
+        }
+
+        public void configBitmapUpLoad(boolean bitmapUpload) {
+            mBitmapUpload = bitmapUpload;
+        }
+
+        public ListRow buildListRow() {
+            ArrayObjectAdapter listRowAdapter = new ArrayObjectAdapter(mCardPresenter);
+            ListRow listRow = new ListRow(new HeaderItem(sRowIdSeed++, "Row"), listRowAdapter);
+            int indexSample = 0;
+            for (int i = 0; i < mCardsPerRow; i++) {
+                // when doing bitmap upload, use different id so each card has different bitmap
+                // otherwise all cards share the same bitmap
+                listRowAdapter.add(new PhotoItem(sSampleStrings[indexSample],
+                        (mBitmapUpload ? sCardIdSeed++ : 0)));
+                indexSample++;
+                if (indexSample >= sSampleStrings.length) {
+                    indexSample = 0;
+                }
+            }
+            return listRow;
+        }
+
+        public ObjectAdapter build() {
+            try {
+                mCardPresenter = mCardPresenterBuilder.build();
+                ArrayObjectAdapter adapter = new ArrayObjectAdapter(
+                        mListRowPresenterBuilder.build());
+                for (int i = 0; i < mRows; i++) {
+                    adapter.add(buildListRow());
+                }
+                return adapter;
+            } finally {
+                mCardPresenter = null;
+            }
         }
     }
 }

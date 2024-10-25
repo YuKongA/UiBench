@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ Copyright (C) 2015 The Android Open Source Project
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,27 +13,29 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License
   -->
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/upload_root"
-    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="10dp"
-    android:clipToPadding="false">
+    android:clipToPadding="false"
+    android:orientation="vertical"
+    android:padding="10dp">
+
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1">
-        <view class="com.android.test.uibench.BitmapUploadActivity$UploadView"
+
+        <view
             android:id="@+id/upload_view"
+            class="com.android.test.uibench.BitmapUploadActivity$UploadView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent" />
     </androidx.cardview.widget.CardView>
 
     <androidx.legacy.widget.Space
-        android:layout_height="10dp"
-        android:layout_width="match_parent" />
+        android:layout_width="match_parent"
+        android:layout_height="10dp" />
 
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
@@ -42,8 +43,8 @@
         android:layout_weight="1" />
 
     <androidx.legacy.widget.Space
-        android:layout_height="10dp"
-        android:layout_width="match_parent" />
+        android:layout_width="match_parent"
+        android:layout_height="10dp" />
 
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"

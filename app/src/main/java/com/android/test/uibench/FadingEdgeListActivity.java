@@ -15,9 +15,10 @@
  */
 package com.android.test.uibench;
 
-import androidx.fragment.app.ListFragment;
 import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
+
+import androidx.fragment.app.ListFragment;
 
 import com.android.test.uibench.listview.CompatListActivity;
 import com.android.test.uibench.listview.FadingEdgeListFragment;
@@ -32,6 +33,6 @@ public class FadingEdgeListActivity extends CompatListActivity {
 
     @Override
     protected ListFragment createListFragment() {
-        return (ListFragment)new FadingEdgeListFragment();
+        return new FadingEdgeListFragment();
     }
 }

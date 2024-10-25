@@ -17,16 +17,17 @@
 package com.android.test.uibench;
 
 import android.animation.ObjectAnimator;
-import android.animation.ValueAnimator;
 import android.graphics.SurfaceTexture;
 import android.os.Bundle;
-import androidx.appcompat.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.TextureView;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.test.uibench.opengl.ImageFlipRenderThread;
 
@@ -46,7 +47,7 @@ public class GlTextureViewActivity extends AppCompatActivity implements TextureV
     }
 
     @Override
-    public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+    public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surface, int width, int height) {
         mRenderThread = new ImageFlipRenderThread(getResources(), surface);
         mRenderThread.start();
 
@@ -58,21 +59,16 @@ public class GlTextureViewActivity extends AppCompatActivity implements TextureV
         animator.setRepeatMode(ObjectAnimator.REVERSE);
         animator.setRepeatCount(ObjectAnimator.INFINITE);
         animator.setDuration(4000);
-        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                mTextureView.invalidate();
-            }
-        });
+        animator.addUpdateListener(animation -> mTextureView.invalidate());
         animator.start();
     }
 
     @Override
-    public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+    public void onSurfaceTextureSizeChanged(@NonNull SurfaceTexture surface, int width, int height) {
     }
 
     @Override
-    public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+    public boolean onSurfaceTextureDestroyed(@NonNull SurfaceTexture surface) {
         mRenderThread.finish();
         try {
             mRenderThread.join();
@@ -83,7 +79,7 @@ public class GlTextureViewActivity extends AppCompatActivity implements TextureV
     }
 
     @Override
-    public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+    public void onSurfaceTextureUpdated(@NonNull SurfaceTexture surface) {
     }
 
 }

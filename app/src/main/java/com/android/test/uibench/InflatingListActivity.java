@@ -21,6 +21,8 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
 
+import androidx.annotation.NonNull;
+
 import com.android.test.uibench.listview.CompatListActivity;
 
 public class InflatingListActivity extends CompatListActivity {
@@ -33,11 +35,13 @@ public class InflatingListActivity extends CompatListActivity {
             ComponentName.createRelative(PACKAGE_NAME, ".InflatingHanListActivity");
     private static final ComponentName LONG_STRING =
             ComponentName.createRelative(PACKAGE_NAME, ".InflatingLongStringListActivity");
+
     @Override
     protected ListAdapter createListAdapter() {
         final ComponentName targetComponent = getIntent().getComponent();
 
         final String[] testStrings;
+        assert targetComponent != null;
         if (targetComponent.equals(LATIN_WORDS)) {
             testStrings = TextUtils.buildSimpleStringList();
         } else if (targetComponent.equals(EMOJI)) {
@@ -51,8 +55,9 @@ public class InflatingListActivity extends CompatListActivity {
         }
 
         return new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, testStrings) {
+            @NonNull
             @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
+            public View getView(int position, View convertView, @NonNull ViewGroup parent) {
                 // pathological getView behavior: drop convertView on the floor to force inflation
                 return super.getView(position, null, parent);
             }

@@ -21,35 +21,17 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.os.Bundle;
-import androidx.annotation.ColorInt;
-import androidx.appcompat.app.AppCompatActivity;
 import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
+
+import androidx.annotation.ColorInt;
+import androidx.appcompat.app.AppCompatActivity;
 
 /**
  * Tests invalidation performance by invalidating a large number of easily rendered views,
  */
 public class InvalidateActivity extends AppCompatActivity {
-    private static class ColorView extends View {
-        @ColorInt
-        public int mColor;
-
-        public ColorView(Context context, AttributeSet attrs) {
-            super(context, attrs);
-        }
-
-        public void setColor(@ColorInt int color) {
-            mColor = color;
-            invalidate();
-        }
-
-        @Override
-        protected void onDraw(Canvas canvas) {
-            canvas.drawColor(mColor);
-        }
-    }
-
     private ColorView[][] mColorViews;
 
     @SuppressWarnings("unused")
@@ -68,7 +50,7 @@ public class InvalidateActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_invalidate);
 
-        ViewGroup root = (ViewGroup) findViewById(R.id.invalidate_root);
+        ViewGroup root = findViewById(R.id.invalidate_root);
         for (int y = 0; y < root.getChildCount(); y++) {
             ViewGroup row = (ViewGroup) root.getChildAt(y);
             if (mColorViews == null) {
@@ -84,5 +66,24 @@ public class InvalidateActivity extends AppCompatActivity {
         animator.setRepeatMode(ValueAnimator.REVERSE);
         animator.setRepeatCount(ValueAnimator.INFINITE);
         animator.start();
+    }
+
+    private static class ColorView extends View {
+        @ColorInt
+        public int mColor;
+
+        public ColorView(Context context, AttributeSet attrs) {
+            super(context, attrs);
+        }
+
+        public void setColor(@ColorInt int color) {
+            mColor = color;
+            invalidate();
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            canvas.drawColor(mColor);
+        }
     }
 }

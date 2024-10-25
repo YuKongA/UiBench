@@ -15,25 +15,6 @@
  */
 package com.android.test.uibench.opengl;
 
-import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.SurfaceTexture;
-import android.opengl.GLUtils;
-import android.util.Log;
-
-import com.android.test.uibench.R;
-
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-
-import javax.microedition.khronos.egl.EGL10;
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.egl.EGLContext;
-import javax.microedition.khronos.egl.EGLDisplay;
-import javax.microedition.khronos.egl.EGLSurface;
-
 import static android.opengl.GLES20.GL_CLAMP_TO_EDGE;
 import static android.opengl.GLES20.GL_COLOR_BUFFER_BIT;
 import static android.opengl.GLES20.GL_COMPILE_STATUS;
@@ -80,28 +61,30 @@ import static android.opengl.GLES20.glUniform1i;
 import static android.opengl.GLES20.glUseProgram;
 import static android.opengl.GLES20.glVertexAttribPointer;
 
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.SurfaceTexture;
+import android.opengl.GLUtils;
+import android.util.Log;
+
+import com.android.test.uibench.R;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+
+import javax.microedition.khronos.egl.EGL10;
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.egl.EGLContext;
+import javax.microedition.khronos.egl.EGLDisplay;
+import javax.microedition.khronos.egl.EGLSurface;
+
 public class ImageFlipRenderThread extends Thread {
     public static final String LOG_TAG = "GLTextureView";
 
     static final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
     static final int EGL_OPENGL_ES2_BIT = 4;
-
-    private volatile boolean mFinished;
-
-    private final Resources mResources;
-    private final SurfaceTexture mSurface;
-
-    private EGL10 mEgl;
-    private EGLDisplay mEglDisplay;
-    private EGLConfig mEglConfig;
-    private EGLContext mEglContext;
-    private EGLSurface mEglSurface;
-
-    public ImageFlipRenderThread(Resources resources, SurfaceTexture surface) {
-        mResources = resources;
-        mSurface = surface;
-    }
-
     private static final String sSimpleVS =
             "attribute vec4 position;\n" +
                     "attribute vec2 texCoords;\n" +
@@ -117,11 +100,12 @@ public class ImageFlipRenderThread extends Thread {
                     "\nvoid main(void) {\n" +
                     "    gl_FragColor = texture2D(texture, outTexCoords);\n" +
                     "}\n\n";
-
     private static final int FLOAT_SIZE_BYTES = 4;
     private static final int TRIANGLE_VERTICES_DATA_STRIDE_BYTES = 5 * FLOAT_SIZE_BYTES;
     private static final int TRIANGLE_VERTICES_DATA_POS_OFFSET = 0;
     private static final int TRIANGLE_VERTICES_DATA_UV_OFFSET = 3;
+    private final Resources mResources;
+    private final SurfaceTexture mSurface;
     private final float[] mTriangleVerticesData = {
             // X, Y, Z, U, V
             -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
@@ -129,6 +113,88 @@ public class ImageFlipRenderThread extends Thread {
             -1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
             1.0f, 1.0f, 0.0f, 1.0f, 1.0f,
     };
+    private volatile boolean mFinished;
+    private EGL10 mEgl;
+    private EGLDisplay mEglDisplay;
+    private EGLContext mEglContext;
+    private EGLSurface mEglSurface;
+
+    public ImageFlipRenderThread(Resources resources, SurfaceTexture surface) {
+        mResources = resources;
+        mSurface = surface;
+    }
+
+    private static int buildProgram() {
+        int vertexShader = buildShader(ImageFlipRenderThread.sSimpleVS, GL_VERTEX_SHADER);
+        if (vertexShader == 0) return 0;
+
+        int fragmentShader = buildShader(ImageFlipRenderThread.sSimpleFS, GL_FRAGMENT_SHADER);
+        if (fragmentShader == 0) return 0;
+
+        int program = glCreateProgram();
+        glAttachShader(program, vertexShader);
+        checkGlError();
+
+        glAttachShader(program, fragmentShader);
+        checkGlError();
+
+        glLinkProgram(program);
+        checkGlError();
+
+        int[] status = new int[1];
+        glGetProgramiv(program, GL_LINK_STATUS, status, 0);
+        if (status[0] != GL_TRUE) {
+            String error = glGetProgramInfoLog(program);
+            Log.d(LOG_TAG, "Error while linking program:\n" + error);
+            glDeleteShader(vertexShader);
+            glDeleteShader(fragmentShader);
+            glDeleteProgram(program);
+            return 0;
+        }
+
+        return program;
+    }
+
+    private static int buildShader(String source, int type) {
+        int shader = glCreateShader(type);
+
+        glShaderSource(shader, source);
+        checkGlError();
+
+        glCompileShader(shader);
+        checkGlError();
+
+        int[] status = new int[1];
+        glGetShaderiv(shader, GL_COMPILE_STATUS, status, 0);
+        if (status[0] != GL_TRUE) {
+            String error = glGetShaderInfoLog(shader);
+            Log.d(LOG_TAG, "Error while compiling shader:\n" + error);
+            glDeleteShader(shader);
+            return 0;
+        }
+
+        return shader;
+    }
+
+    private static void checkGlError() {
+        int error = glGetError();
+        if (error != GL_NO_ERROR) {
+            Log.w(LOG_TAG, "GL error = 0x" + Integer.toHexString(error));
+        }
+    }
+
+    private static int[] getConfig() {
+        return new int[]{
+                EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+                EGL10.EGL_RED_SIZE, 8,
+                EGL10.EGL_GREEN_SIZE, 8,
+                EGL10.EGL_BLUE_SIZE, 8,
+                EGL10.EGL_ALPHA_SIZE, 8,
+                EGL10.EGL_DEPTH_SIZE, 0,
+                EGL10.EGL_STENCIL_SIZE, 0,
+                EGL10.EGL_NONE
+        };
+    }
 
     @Override
     public void run() {
@@ -139,7 +205,7 @@ public class ImageFlipRenderThread extends Thread {
         triangleVertices.put(mTriangleVerticesData).position(0);
 
         int texture = loadTexture(R.drawable.large_photo);
-        int program = buildProgram(sSimpleVS, sSimpleFS);
+        int program = buildProgram();
 
         int attribPosition = glGetAttribLocation(program, "position");
         checkGlError();
@@ -230,69 +296,10 @@ public class ImageFlipRenderThread extends Thread {
         return texture;
     }
 
-    private static int buildProgram(String vertex, String fragment) {
-        int vertexShader = buildShader(vertex, GL_VERTEX_SHADER);
-        if (vertexShader == 0) return 0;
-
-        int fragmentShader = buildShader(fragment, GL_FRAGMENT_SHADER);
-        if (fragmentShader == 0) return 0;
-
-        int program = glCreateProgram();
-        glAttachShader(program, vertexShader);
-        checkGlError();
-
-        glAttachShader(program, fragmentShader);
-        checkGlError();
-
-        glLinkProgram(program);
-        checkGlError();
-
-        int[] status = new int[1];
-        glGetProgramiv(program, GL_LINK_STATUS, status, 0);
-        if (status[0] != GL_TRUE) {
-            String error = glGetProgramInfoLog(program);
-            Log.d(LOG_TAG, "Error while linking program:\n" + error);
-            glDeleteShader(vertexShader);
-            glDeleteShader(fragmentShader);
-            glDeleteProgram(program);
-            return 0;
-        }
-
-        return program;
-    }
-
-    private static int buildShader(String source, int type) {
-        int shader = glCreateShader(type);
-
-        glShaderSource(shader, source);
-        checkGlError();
-
-        glCompileShader(shader);
-        checkGlError();
-
-        int[] status = new int[1];
-        glGetShaderiv(shader, GL_COMPILE_STATUS, status, 0);
-        if (status[0] != GL_TRUE) {
-            String error = glGetShaderInfoLog(shader);
-            Log.d(LOG_TAG, "Error while compiling shader:\n" + error);
-            glDeleteShader(shader);
-            return 0;
-        }
-
-        return shader;
-    }
-
     private void checkEglError() {
         int error = mEgl.eglGetError();
         if (error != EGL10.EGL_SUCCESS) {
             Log.w(LOG_TAG, "EGL error = 0x" + Integer.toHexString(error));
-        }
-    }
-
-    private static void checkGlError() {
-        int error = glGetError();
-        if (error != GL_NO_ERROR) {
-            Log.w(LOG_TAG, "GL error = 0x" + Integer.toHexString(error));
         }
     }
 
@@ -326,7 +333,7 @@ public class ImageFlipRenderThread extends Thread {
                     GLUtils.getEGLErrorString(mEgl.eglGetError()));
         }
 
-        mEglConfig = chooseEglConfig();
+        EGLConfig mEglConfig = chooseEglConfig();
         if (mEglConfig == null) {
             throw new RuntimeException("eglConfig not initialized");
         }
@@ -351,7 +358,6 @@ public class ImageFlipRenderThread extends Thread {
         }
     }
 
-
     EGLContext createContext(EGL10 egl, EGLDisplay eglDisplay, EGLConfig eglConfig) {
         int[] attrib_list = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL10.EGL_NONE};
         return egl.eglCreateContext(eglDisplay, eglConfig, EGL10.EGL_NO_CONTEXT, attrib_list);
@@ -368,19 +374,6 @@ public class ImageFlipRenderThread extends Thread {
             return configs[0];
         }
         return null;
-    }
-
-    private static int[] getConfig() {
-        return new int[]{
-                EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-                EGL10.EGL_RED_SIZE, 8,
-                EGL10.EGL_GREEN_SIZE, 8,
-                EGL10.EGL_BLUE_SIZE, 8,
-                EGL10.EGL_ALPHA_SIZE, 8,
-                EGL10.EGL_DEPTH_SIZE, 0,
-                EGL10.EGL_STENCIL_SIZE, 0,
-                EGL10.EGL_NONE
-        };
     }
 
     public void finish() {

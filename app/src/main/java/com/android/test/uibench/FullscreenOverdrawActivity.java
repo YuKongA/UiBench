@@ -17,24 +17,40 @@ package com.android.test.uibench;
 
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
-import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.ColorFilter;
-import android.graphics.PixelFormat;
 import android.graphics.Color;
+import android.graphics.ColorFilter;
 import android.graphics.Paint;
+import android.graphics.PixelFormat;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import androidx.appcompat.app.AppCompatActivity;
 import android.view.View;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 
 /**
  * Draws hundreds of levels of overdraw over the content area.
- *
+ * <p>
  * This should all be optimized out by the renderer.
  */
 public class FullscreenOverdrawActivity extends AppCompatActivity {
-    private class OverdrawDrawable extends Drawable {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        OverdrawDrawable overdraw = new OverdrawDrawable();
+        getWindow().setBackgroundDrawable(overdraw);
+
+        setContentView(new View(this));
+
+        ObjectAnimator objectAnimator = ObjectAnimator.ofInt(overdraw, "colorValue", 0, 255);
+        objectAnimator.setRepeatMode(ValueAnimator.REVERSE);
+        objectAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        objectAnimator.start();
+    }
+
+    private static class OverdrawDrawable extends Drawable {
         Paint paint = new Paint();
         int mColorValue = 0;
 
@@ -45,7 +61,7 @@ public class FullscreenOverdrawActivity extends AppCompatActivity {
         }
 
         @Override
-        public void draw(Canvas canvas) {
+        public void draw(@NonNull Canvas canvas) {
             paint.setColor(Color.rgb(mColorValue, 255 - mColorValue, 255));
 
             for (int i = 0; i < 400; i++) {
@@ -65,19 +81,5 @@ public class FullscreenOverdrawActivity extends AppCompatActivity {
         public int getOpacity() {
             return PixelFormat.OPAQUE;
         }
-    }
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        OverdrawDrawable overdraw = new OverdrawDrawable();
-        getWindow().setBackgroundDrawable(overdraw);
-
-        setContentView(new View(this));
-
-        ObjectAnimator objectAnimator = ObjectAnimator.ofInt(overdraw, "colorValue", 0, 255);
-        objectAnimator.setRepeatMode(ValueAnimator.REVERSE);
-        objectAnimator.setRepeatCount(ValueAnimator.INFINITE);
-        objectAnimator.start();
     }
 }

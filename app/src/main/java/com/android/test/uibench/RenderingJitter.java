@@ -16,6 +16,7 @@
 
 package com.android.test.uibench;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
@@ -28,6 +29,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.Looper;
 import android.os.Message;
 import android.util.AttributeSet;
 import android.view.FrameMetrics;
@@ -37,41 +39,107 @@ import android.view.Window.OnFrameMetricsAvailableListener;
 import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 
-public class RenderingJitter extends Activity {
-    private TextView mJitterReport;
-    private TextView mUiFrameTimeReport;
-    private TextView mRenderThreadTimeReport;
-    private TextView mTotalFrameTimeReport;
-    private TextView mMostlyTotalFrameTimeReport;
-    private PointGraphView mGraph;
+import androidx.annotation.NonNull;
 
-    private static Handler sMetricsHandler;
+public class RenderingJitter extends Activity {
+    private static final Handler sMetricsHandler;
+
     static {
         HandlerThread thread = new HandlerThread("frameMetricsListener");
         thread.start();
         sMetricsHandler = new Handler(thread.getLooper());
     }
 
-private Handler mUpdateHandler = new Handler() {
-    @Override
-    public void handleMessage(Message msg) {
-        int messageId = msg.what;
-        if (messageId == getResources().getIdentifier("jitter_mma", "id", getPackageName())) {
-            mJitterReport.setText((CharSequence) msg.obj);
-        } else if (messageId == getResources().getIdentifier("totalish_mma", "id", getPackageName())) {
-            mMostlyTotalFrameTimeReport.setText((CharSequence) msg.obj);
-        } else if (messageId == getResources().getIdentifier("ui_frametime_mma", "id", getPackageName())) {
-            mUiFrameTimeReport.setText((CharSequence) msg.obj);
-        } else if (messageId == getResources().getIdentifier("rt_frametime_mma", "id", getPackageName())) {
-            mRenderThreadTimeReport.setText((CharSequence) msg.obj);
-        } else if (messageId == getResources().getIdentifier("total_mma", "id", getPackageName())) {
-            mTotalFrameTimeReport.setText((CharSequence) msg.obj);
-        } else if (messageId == getResources().getIdentifier("graph", "id", getPackageName())) {
-            mGraph.addJitterSample(msg.arg1, msg.arg2);
+    private TextView mJitterReport;
+    private TextView mUiFrameTimeReport;
+    private TextView mRenderThreadTimeReport;
+    private TextView mTotalFrameTimeReport;
+    private TextView mMostlyTotalFrameTimeReport;
+    private PointGraphView mGraph;
+    private final Handler mUpdateHandler = new Handler(Looper.getMainLooper()) {
+        @Override
+        public void handleMessage(Message msg) {
+            int messageId = msg.what;
+            if (messageId == R.id.jitter_mma) {
+                mJitterReport.setText((CharSequence) msg.obj);
+            } else if (messageId == R.id.totalish_mma) {
+                mMostlyTotalFrameTimeReport.setText((CharSequence) msg.obj);
+            } else if (messageId == R.id.ui_frametime_mma) {
+                mUiFrameTimeReport.setText((CharSequence) msg.obj);
+            } else if (messageId == R.id.rt_frametime_mma) {
+                mRenderThreadTimeReport.setText((CharSequence) msg.obj);
+            } else if (messageId == R.id.total_mma) {
+                mTotalFrameTimeReport.setText((CharSequence) msg.obj);
+            } else if (messageId == R.id.graph) {
+                mGraph.addJitterSample(msg.arg1, msg.arg2);
+            }
         }
-    }
-};
+    };
+    private final OnFrameMetricsAvailableListener mMetricsListener = new OnFrameMetricsAvailableListener() {
+        private final static double WEIGHT = 40;
+        private long mPreviousFrameTotal;
+        private double mJitterMma;
+        private double mUiFrametimeMma;
+        private double mRtFrametimeMma;
+        private double mTotalFrametimeMma;
+        private double mMostlyTotalFrametimeMma;
+        private boolean mNeedsFirstValues = true;
 
+        @SuppressLint("DefaultLocale")
+        @Override
+        public void onFrameMetricsAvailable(Window window, FrameMetrics frameMetrics,
+                                            int dropCountSinceLastInvocation) {
+            if (frameMetrics.getMetric(FrameMetrics.FIRST_DRAW_FRAME) == 1) {
+                return;
+            }
+
+            long uiDuration = frameMetrics.getMetric(FrameMetrics.INPUT_HANDLING_DURATION)
+                    + frameMetrics.getMetric(FrameMetrics.ANIMATION_DURATION)
+                    + frameMetrics.getMetric(FrameMetrics.LAYOUT_MEASURE_DURATION)
+                    + frameMetrics.getMetric(FrameMetrics.DRAW_DURATION);
+            long rtDuration = frameMetrics.getMetric(FrameMetrics.SYNC_DURATION)
+                    + frameMetrics.getMetric(FrameMetrics.COMMAND_ISSUE_DURATION);
+            long totalDuration = frameMetrics.getMetric(FrameMetrics.TOTAL_DURATION);
+            long jitter = Math.abs(totalDuration - mPreviousFrameTotal);
+            if (mNeedsFirstValues) {
+                mJitterMma = 0;
+                mUiFrametimeMma = uiDuration;
+                mRtFrametimeMma = rtDuration;
+                mTotalFrametimeMma = totalDuration;
+                mMostlyTotalFrametimeMma = uiDuration + rtDuration;
+                mNeedsFirstValues = false;
+            } else {
+                mJitterMma = add(mJitterMma, jitter);
+                mUiFrametimeMma = add(mUiFrametimeMma, uiDuration);
+                mRtFrametimeMma = add(mRtFrametimeMma, rtDuration);
+                mTotalFrametimeMma = add(mTotalFrametimeMma, totalDuration);
+                mMostlyTotalFrametimeMma = add(mMostlyTotalFrametimeMma, uiDuration + rtDuration);
+            }
+            mPreviousFrameTotal = totalDuration;
+            mUpdateHandler.obtainMessage(R.id.jitter_mma,
+                    String.format("Jitter: %.3fms", toMs(mJitterMma))).sendToTarget();
+            mUpdateHandler.obtainMessage(R.id.totalish_mma,
+                    String.format("CPU-total duration: %.3fms", toMs(mMostlyTotalFrametimeMma))).sendToTarget();
+            mUpdateHandler.obtainMessage(R.id.ui_frametime_mma,
+                    String.format("UI duration: %.3fms", toMs(mUiFrametimeMma))).sendToTarget();
+            mUpdateHandler.obtainMessage(R.id.rt_frametime_mma,
+                    String.format("RT duration: %.3fms", toMs(mRtFrametimeMma))).sendToTarget();
+            mUpdateHandler.obtainMessage(R.id.total_mma,
+                    String.format("Total duration: %.3fms", toMs(mTotalFrametimeMma))).sendToTarget();
+            mUpdateHandler.obtainMessage(R.id.graph, (int) (jitter / 1000),
+                    (int) (mJitterMma / 1000)).sendToTarget();
+        }
+
+        double add(double previous, double today) {
+            return (((WEIGHT - 1) * previous) + today) / WEIGHT;
+        }
+
+        double toMs(double val) {
+            return val / 1000000;
+        }
+    };
+
+    @SuppressLint("SetTextI18n")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -96,18 +164,17 @@ private Handler mUpdateHandler = new Handler() {
         private static final float[] JITTER_LINES_MS = {
                 .5f, 1.0f, 1.5f, 2.0f, 3.0f, 4.0f, 5.0f
         };
-        private static final String[] JITTER_LINES_LABELS = makeLabels(JITTER_LINES_MS);
-        private static final int[] JITTER_LINES_COLORS = new int[] {
+        private static final String[] JITTER_LINES_LABELS = makeLabels();
+        private static final int[] JITTER_LINES_COLORS = new int[]{
                 0xFF00E676, 0xFFFFF176, 0xFFFDD835, 0xFFFBC02D, 0xFFF9A825,
                 0xFFF57F17, 0xFFDD2C00
         };
-        private Paint mPaint = new Paint();
-        private float[] mJitterYs = new float[JITTER_LINES_MS.length];
-        private float mLabelWidth;
-        private float mLabelHeight;
-        private float mDensity;
+        private final Paint mPaint = new Paint();
+        private final float[] mJitterYs = new float[JITTER_LINES_MS.length];
+        private final float mLabelWidth;
+        private final float mLabelHeight;
+        private final float mDensity;
         private float mGraphScale;
-        private float mGraphMaxMs;
 
         private float[] mJitterPoints;
         private float[] mJitterAvgPoints;
@@ -121,6 +188,14 @@ private Handler mUpdateHandler = new Handler() {
             mPaint.getTextBounds("8.8", 0, 3, textBounds);
             mLabelWidth = textBounds.width() + dp(2);
             mLabelHeight = textBounds.height();
+        }
+
+        private static String[] makeLabels() {
+            String[] ret = new String[PointGraphView.JITTER_LINES_MS.length];
+            for (int i = 0; i < PointGraphView.JITTER_LINES_MS.length; i++) {
+                ret[i] = Float.toString(PointGraphView.JITTER_LINES_MS[i]);
+            }
+            return ret;
         }
 
         public void addJitterSample(int jitterUs, int jitterUsAvg) {
@@ -171,7 +246,7 @@ private Handler mUpdateHandler = new Handler() {
             mJitterPoints = new float[graphWidth * 2];
             mJitterAvgPoints = new float[graphWidth * 2];
             for (int i = 0; i < mJitterPoints.length; i += 2) {
-                mJitterPoints[i] = mLabelWidth + (i / 2 + 1) * mDensity;
+                mJitterPoints[i] = mLabelWidth + ((float) i / 2 + 1) * mDensity;
                 mJitterAvgPoints[i] = mJitterPoints[i];
             }
             if (oldJitterPoints != null) {
@@ -182,84 +257,13 @@ private Handler mUpdateHandler = new Handler() {
                     mJitterAvgPoints[i] = oldJitterAvgPoints[i + oldIndexShift];
                 }
             }
-            mGraphMaxMs = JITTER_LINES_MS[JITTER_LINES_MS.length - 1] + .5f;
+            float mGraphMaxMs = JITTER_LINES_MS[JITTER_LINES_MS.length - 1] + .5f;
             mGraphScale = (h / mGraphMaxMs);
             for (int i = 0; i < JITTER_LINES_MS.length; i++) {
                 mJitterYs[i] = (float) Math.floor(h - mGraphScale * JITTER_LINES_MS[i]);
             }
         }
-
-        private static String[] makeLabels(float[] divisions) {
-            String[] ret = new String[divisions.length];
-            for (int i = 0; i < divisions.length; i++) {
-                ret[i] = Float.toString(divisions[i]);
-            }
-            return ret;
-        }
     }
-
-    private final OnFrameMetricsAvailableListener mMetricsListener = new OnFrameMetricsAvailableListener() {
-        private final static double WEIGHT = 40;
-        private long mPreviousFrameTotal;
-        private double mJitterMma;
-        private double mUiFrametimeMma;
-        private double mRtFrametimeMma;
-        private double mTotalFrametimeMma;
-        private double mMostlyTotalFrametimeMma;
-        private boolean mNeedsFirstValues = true;
-
-        @Override
-        public void onFrameMetricsAvailable(Window window, FrameMetrics frameMetrics,
-                int dropCountSinceLastInvocation) {
-            if (frameMetrics.getMetric(FrameMetrics.FIRST_DRAW_FRAME) == 1) {
-                return;
-            }
-
-            long uiDuration = frameMetrics.getMetric(FrameMetrics.INPUT_HANDLING_DURATION)
-                    + frameMetrics.getMetric(FrameMetrics.ANIMATION_DURATION)
-                    + frameMetrics.getMetric(FrameMetrics.LAYOUT_MEASURE_DURATION)
-                    + frameMetrics.getMetric(FrameMetrics.DRAW_DURATION);
-            long rtDuration = frameMetrics.getMetric(FrameMetrics.SYNC_DURATION)
-                    + frameMetrics.getMetric(FrameMetrics.COMMAND_ISSUE_DURATION);
-            long totalDuration = frameMetrics.getMetric(FrameMetrics.TOTAL_DURATION);
-            long jitter = Math.abs(totalDuration - mPreviousFrameTotal);
-            if (mNeedsFirstValues) {
-                mJitterMma = 0;
-                mUiFrametimeMma = uiDuration;
-                mRtFrametimeMma = rtDuration;
-                mTotalFrametimeMma = totalDuration;
-                mMostlyTotalFrametimeMma = uiDuration + rtDuration;
-                mNeedsFirstValues = false;
-            } else {
-                mJitterMma = add(mJitterMma, jitter);
-                mUiFrametimeMma = add(mUiFrametimeMma, uiDuration);
-                mRtFrametimeMma = add(mRtFrametimeMma, rtDuration);
-                mTotalFrametimeMma = add(mTotalFrametimeMma, totalDuration);
-                mMostlyTotalFrametimeMma = add(mMostlyTotalFrametimeMma, uiDuration + rtDuration);
-            }
-            mPreviousFrameTotal = totalDuration;
-            mUpdateHandler.obtainMessage(R.id.jitter_mma,
-                    String.format("Jitter: %.3fms", toMs(mJitterMma))).sendToTarget();
-            mUpdateHandler.obtainMessage(R.id.totalish_mma,
-                    String.format("CPU-total duration: %.3fms", toMs(mMostlyTotalFrametimeMma))).sendToTarget();
-            mUpdateHandler.obtainMessage(R.id.ui_frametime_mma,
-                    String.format("UI duration: %.3fms", toMs(mUiFrametimeMma))).sendToTarget();
-            mUpdateHandler.obtainMessage(R.id.rt_frametime_mma,
-                    String.format("RT duration: %.3fms", toMs(mRtFrametimeMma))).sendToTarget();
-            mUpdateHandler.obtainMessage(R.id.total_mma,
-                    String.format("Total duration: %.3fms", toMs(mTotalFrametimeMma))).sendToTarget();
-            mUpdateHandler.obtainMessage(R.id.graph, (int) (jitter / 1000),
-                    (int) (mJitterMma / 1000)).sendToTarget();
-        }
-
-        double add(double previous, double today) {
-            return (((WEIGHT - 1) * previous) + today) / WEIGHT;
-        }
-
-        double toMs(double val) {
-            return val / 1000000;
-        }
-    };
 
     private static final class AnimatedBackgroundDrawable extends Drawable {
         private static final int FROM_COLOR = 0xFF18FFFF;
@@ -319,7 +323,7 @@ private Handler mUpdateHandler = new Handler() {
         }
 
         @Override
-        protected void onBoundsChange(Rect bounds) {
+        protected void onBoundsChange(@NonNull Rect bounds) {
             super.onBoundsChange(bounds);
             mMoveStep = Math.min(bounds.width(), bounds.height()) / 130.0f;
             mRadius = Math.min(bounds.width(), bounds.height()) / 20.0f;

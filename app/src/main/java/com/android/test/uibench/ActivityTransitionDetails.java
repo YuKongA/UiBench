@@ -21,12 +21,11 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import androidx.appcompat.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ImageView;
 
-import com.android.test.uibench.ActivityTransition;
-import com.android.test.uibench.R;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 
 public class ActivityTransitionDetails extends AppCompatActivity {
@@ -50,7 +49,7 @@ public class ActivityTransitionDetails extends AppCompatActivity {
             mImageResourceId = ActivityTransition.getDrawableIdForKey(name);
         }
 
-        return getResources().getDrawable(mImageResourceId);
+        return ContextCompat.getDrawable(this, mImageResourceId);
     }
 
     public void clicked(View v) {

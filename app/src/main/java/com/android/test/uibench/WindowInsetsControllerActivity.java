@@ -18,8 +18,8 @@ package com.android.test.uibench;
 
 import static android.view.WindowInsetsAnimation.Callback.DISPATCH_MODE_STOP;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
-import android.os.PersistableBundle;
 import android.view.WindowInsets;
 import android.view.WindowInsetsAnimation;
 import android.widget.EditText;
@@ -32,6 +32,7 @@ import java.util.List;
 
 public class WindowInsetsControllerActivity extends AppCompatActivity {
 
+    @SuppressLint("SetTextI18n")
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,12 +43,12 @@ public class WindowInsetsControllerActivity extends AppCompatActivity {
 
         text.setWindowInsetsAnimationCallback(
                 new WindowInsetsAnimation.Callback(DISPATCH_MODE_STOP) {
-            @NonNull
-            @Override
-            public WindowInsets onProgress(@NonNull WindowInsets insets,
-                    @NonNull List<WindowInsetsAnimation> runningAnimations) {
-                return WindowInsets.CONSUMED;
-            }
-        });
+                    @NonNull
+                    @Override
+                    public WindowInsets onProgress(@NonNull WindowInsets insets,
+                                                   @NonNull List<WindowInsetsAnimation> runningAnimations) {
+                        return WindowInsets.CONSUMED;
+                    }
+                });
     }
 }

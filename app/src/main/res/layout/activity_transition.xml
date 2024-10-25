@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ Copyright (C) 2015 The Android Open Source Project
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,68 +20,76 @@
     android:clipChildren="true"
     android:columnCount="2"
     android:rowCount="4">
+
     <ImageView
         android:id="@+id/ducky"
-        android:layout_height="wrap_content"
         android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="clicked"
         android:scaleType="centerCrop"
         android:src="@drawable/ducky"
-        android:onClick="clicked"
-        android:transitionName="ducky"/>
+        android:transitionName="ducky" />
+
     <ImageView
         android:id="@+id/woot"
-        android:layout_height="wrap_content"
         android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="clicked"
         android:scaleType="centerCrop"
         android:src="@drawable/woot"
-        android:onClick="clicked"
-        android:transitionName="woot"/>
+        android:transitionName="woot" />
+
     <ImageView
         android:id="@+id/ball"
-        android:layout_height="wrap_content"
         android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="clicked"
         android:scaleType="centerCrop"
         android:src="@drawable/ball"
-        android:onClick="clicked"
-        android:transitionName="ball"/>
+        android:transitionName="ball" />
+
     <ImageView
         android:id="@+id/block"
-        android:layout_height="wrap_content"
         android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="clicked"
         android:scaleType="centerCrop"
         android:src="@drawable/block"
-        android:onClick="clicked"
-        android:transitionName="block"/>
+        android:transitionName="block" />
+
     <ImageView
         android:id="@+id/jellies"
-        android:layout_height="wrap_content"
         android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="clicked"
         android:scaleType="centerCrop"
         android:src="@drawable/jellies"
-        android:onClick="clicked"
-        android:transitionName="jellies"/>
+        android:transitionName="jellies" />
+
     <ImageView
         android:id="@+id/mug"
-        android:layout_height="wrap_content"
         android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="clicked"
         android:scaleType="centerCrop"
         android:src="@drawable/mug"
-        android:onClick="clicked"
-        android:transitionName="mug"/>
+        android:transitionName="mug" />
+
     <ImageView
         android:id="@+id/pencil"
-        android:layout_height="wrap_content"
         android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="clicked"
         android:scaleType="centerCrop"
         android:src="@drawable/pencil"
-        android:onClick="clicked"
-        android:transitionName="pencil"/>
+        android:transitionName="pencil" />
+
     <ImageView
         android:id="@+id/scissors"
-        android:layout_height="wrap_content"
         android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="clicked"
         android:scaleType="centerCrop"
         android:src="@drawable/scissors"
-        android:onClick="clicked"
-        android:transitionName="scissors"/>
+        android:transitionName="scissors" />
 </GridLayout>
